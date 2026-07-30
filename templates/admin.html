@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin's Page</title>
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <style>
+        body {font-family: Arial, sans-serif;
+            margin: 30px;
+            background-color: #F4F6F4;
+            color: #070707;}
+        table {width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 30px;
+            background-color: #ecd2ce;}
+        th, td {border: 1px solid #000000;
+            padding: 12px;
+            text-align: left;}
+        th {background-color: #cedae8;
+            font-weight: bold;}
+        tr:nth-child(even) {background-color:#c0cfb4;}
+        form {margin-bottom: 10px;}
+        input, select, button {padding: 6px;
+            margin: 4px 0;}
+        .dashboard-top-bar {display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            margin-bottom: 40px;
+            gap: 20px;
+            width: 100%;}
+        .card-label {font-size: 13px;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: capitalize;
+            margin-bottom: 4px;}
+        .card-value {font-size: 26px;
+            font-weight: bold;
+            color: #212529;}
+        .search-form {display: flex;
+            gap: 6px;
+            margin: 0;}
+ </style> 
+</head>
+
+</head>
+<body>
+    <h1>Welcome Admin!</h1>
+    <a href="/logout">Log Out</a>
+
+    <div class="dashboard-top-bar">
+        <div>
+            <div>
+                <span class="card-label">Total Treks</span>
+                <span class="card-value">{{ t_treks }}</span>
+            </div>
+        </div>
+        <div>
+            <div>
+                <span class="card-label">Total Accounts</span>
+                <span class="card-value">{{ t_users_staff }}</span>
+            </div>
+        </div>
+        <div>
+            <div>
+                <span class="card-label">Total Bookings</span>
+                <span class="card-value">{{ t_bookings }}</span>
+            </div>
+        </div>
+        <div>
+            <span class="card-label">Search Panel</span>
+            <form method="GET" action="/admin" class="search-form">
+                <input type="text" name="search" placeholder="Search data..." value="{{ search_val }}">
+                <button type="submit">Search Data</button>
+            </form>
+        </div>
+    </div> 
+
+    
+    <h2>Create a New Trek Route</h2>
+    <form action="/admin" method="POST">
+    <input type="hidden" name="action" value="create_trek">
+                
+    <label for="trek_name">Trek Name:</label><br>
+    <input type="text" name="trek_name"required><br>
+
+    <label for="location">Location:</label><br>
+    <input type="text" name="location" required><br>
+                
+    <label for="difficulty">Difficulty:</label><br>
+    <select name="difficulty">
+        <option value="Easy">Easy</option>
+        <option value="Moderate">Moderate</option>
+        <option value="Hard">Hard</option>
+    </select><br>
+
+    <label for="Duration">Duration (in days)</label><br>
+    <input type="number" name="duration"required>
+    <label >Start Date:</label><input type="date" name="start_date" required>
+    <label >End Date:</label><input type="date" name="end_date" required><br>
+
+    <label for="available_slot">Available Slots:</label><br>
+    <input type="number" name="available_slot"required>
+                
+    <button type="submit">Save Trek Itinerary</button>
+    </form>
+        
+
+
+    <h2>Active Trekking Routes</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Trek ID</th><th>Trek Name</th><th>Location</th><th>Difficulty</th>
+                <th>Duration</th><th>Slots Remaining</th><th>Travel Schedule</th>
+                <th>Staff ID</th><th>Modify</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for trek in all_treks %}
+            <tr>
+                <td>{{ trek.id }}</td>
+                <td>{{ trek.name }}</td>
+                <td>{{ trek.location }}</td>
+                <td>{{ trek.difficulty }}</td>
+                <td>{{ trek.duration }} Days</td>
+                <td>{{ trek.available_slot }}</td>
+                <td>{{ trek.start_date }} to {{ trek.end_date }}</td>
+                <td>{{ trek.staff_id if trek.staff_id else 'Not Linked' }}</td>
+                <td>
+                    {% if trek.staff_id %}
+                    <form action="/admin" method="POST">
+                    <input type="hidden" name="action" value="assign_staff">
+                    <input type="hidden" name="trek_id" value="{{ trek.id }}">
+                    <input type="number" name="staff_id" placeholder="New ID" required>
+                    <button type="submit">Change Staff</button>
+                    </form>
+                    {% else %}
+                    <form action="/admin" method="POST">
+                    <input type="hidden" name="action" value="assign_staff">
+                    <input type="hidden" name="trek_id" value="{{ trek.id }}">
+                    <input type="number" name="staff_id" placeholder="Staff ID" required>
+                    <button type="submit">Link Staff</button>
+                    </form>
+                    {% endif %}
+                    <form action="/admin" method="POST">
+                    <input type="hidden" name="action" value="remove_trek">
+                    <input type="hidden" name="trek_id" value="{{ trek.id }}">
+                    <button type="submit">Delete Trek</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+
+    <h2>Registration Status</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>User ID</th><th>Full Name</th><th>Email Address</th>
+                <th>Role</th><th>Current Status</th><th>Change Permissions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for person in pending + approved + blacklisted + all_trekkers %}
+            <tr>
+                <td>{{ person.id }}</td>
+                <td>{{ person.name }}</td>
+                <td>{{ person.email }}</td>
+                <td><span>{{ person.role.upper() }}</span></td>
+                <td><span>{{ person.status }}</span></td>
+                <td>
+                    <form action="/admin" method="POST">
+                    <input type="hidden" name="action" value="manage_staff">
+                    <input type="hidden" name="ID" value="{{ person.id }}">
+                    <input type="hidden" name="Status" value="approved">
+                    <button type="submit" {% if person.status=='approved' %}disabled{% endif %}>Approve</button>
+                    </form>
+                    
+                    <form action="/admin" method="POST">
+                    <input type="hidden" name="action" value="manage_staff">
+                    <input type="hidden" name="ID" value="{{ person.id }}">
+                    <input type="hidden" name="Status" value="blacklisted">
+                    <button type="submit" {% if person.status=='blacklisted' %}disabled{% endif %}>Blacklist</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+
+    <h2>Global Booking Records</h2>
+    <table>
+        <thead>
+            <tr><th>Log ID</th><th>User ID Number</th><th>Trek ID Number</th><th>Date Booked</th><th>Booking Status</th></tr>
+        </thead>
+        <tbody>
+            {% for book in all_bookings %}
+            <tr>
+                <td>{{ book.id }}</td>
+                <td>User No {{ book.user_id }}</td>
+                <td>Trek No {{ book.trek_id }}</td>
+                <td>{{ book.booking_date }}</td>
+                <td>{{ book.status }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

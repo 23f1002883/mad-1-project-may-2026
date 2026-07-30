@@ -1,0 +1,27 @@
+openapi: 3.0.0
+info:
+  title: Trekking Management Application API
+  version: 1.0.0
+  description: Optional REST endpoints for managing multi-role trekking workflows.
+paths:
+  /api/treks:
+    get:
+      summary: Fetch open treks
+      description: Returns a complete JSON list of all open trek itineraries for trekkers.
+      responses:
+        '200':
+          description: A list of open trek records returned successfully.
+  /api/bookings:
+    get:
+      summary: Fetch booking records
+      description: Returns administrative tracking lines for historic analytics.
+      responses:
+        '200':
+          description: A structural list of reservation data lines.
+  /api/book_trek:
+    post:
+      summary: Book a new itinerary slot
+      description: Safely process a new trek slot reservation for the active session.
+      responses:
+        '200':
+          description: Transaction processed successfully.

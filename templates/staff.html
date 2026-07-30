@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff's Dashboard</title>
+    <style>
+        body {
+        font-family: Arial, sans-serif; 
+        margin: 30px; 
+        background-color: #F4F6F4; 
+        color: #070707;} 
+    table {width: 100%; 
+        border-collapse: collapse; 
+        margin-top: 15px; 
+        margin-bottom: 35px; 
+        background-color: #ecd2ce; }
+    th, td {border: 1px solid #000000; 
+        padding: 12px; 
+        text-align: left;
+        vertical-align: middle;} 
+    th {background-color: #cedae8;
+        font-weight: bold;} 
+    tr:nth-child(odd) td {background-color: #ecd2ce;}
+    tr:nth-child(even) td {background-color: #c0cfb4;}
+    input, select, button {padding: 6px; 
+        margin-right: 10px; 
+        margin: 4px 0;} 
+    button {cursor: pointer;}
+    </style>
+</head>
+
+<body>
+    <h1>WELCOME TO STAFF'S DASHBOARD, {{ session['user_name'] }}</h1><hr>
+    <p><strong>Staff ID: {{session['user_id'] }}</strong></p><hr>
+    <a href="/logout">Log out</a>
+    <hr>
+
+    <h2>Your Assigned Treks </h2>
+    {% if treks_to_guide %}
+    <table>
+        <thead>
+            <tr>
+                <th>Trek ID</th><th>Trek Name</th><th>Difficulty</th>
+                <th>Starting Date</th><th>Available Slots</th>
+                <th>Current Status</th><th>Manage</th>
+            </tr>
+        </thead>   
+        <tbody>
+            {% for trek in treks_to_guide %}
+            <tr>
+                <td>{{ trek.id }}</td>
+                <td><strong>{{ trek.name }}</strong></td>
+                <td><strong>{{ trek.difficulty }}</strong></td>
+                <td>{{ trek.start_date }}</td>
+                <td>{{ trek.available_slot }}</td>
+                <td><strong>{{ trek.status.upper() }}</strong></td>
+                <td>
+                    <form action="/staff" method="POST">
+                    <input type="hidden" name="action" value="update_slots">
+                    <input type="hidden" name="trek_id" value="{{ trek.id }}">
+                    <input type="number" name="available_slot" value="{{ trek.available_slot }}"min="0" required>
+                    <button type="submit">Update Slots</button>
+                    </form>
+
+                    <form action="/staff" method="POST">
+                    <input type="hidden" name="action" value="change_status">
+                    <input type="hidden" name="trek_id" value="{{ trek.id }}">
+                    <select name="status">
+                        <option value="open" {% if trek.status == 'open' %}selected{% endif %}>Open</option>
+                        <option value="closed" {% if trek.status == 'closed' %}selected{% endif %}>Closed</option>
+                        <option value="started" {% if trek.status == 'started' %}selected{% endif %}>Started</option>
+                        <option value="completed" {% if trek.status == 'completed' %}selected{% endif %}>Completed</option>
+                    </select>
+                    <button type="submit">Change Status</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>You do not have any trekking routes assigned to you by the Admin yet.</p>
+    {% endif %}
+<hr>
+    <h2>Registered Participant Lists per Trek</h2>
+    {% if treks_to_guide %}
+        {% for trek in treks_to_guide %}
+            <h4>Bookings for: {{ trek.name }}</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Booking ID</th><th>Trekker ID</th>
+                        <th>Trekker Name</th><th>Email Address</th>
+                        <th>Contact Number</th><th>Booking Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set ns = namespace(has_bookings=false) %}
+                    {% for b in bookings_list %}
+                        {% if b.trek_id == trek.id %}
+                            {% set ns.has_bookings = true %}
+                            <tr>
+                                <td>{{ b.id }}</td>
+                                <td>{{ b.user_id }}</td>
+                                {% for u in users_list %}
+                                    {% if u.id == b.user_id %}
+                                        <td>{{ u.name }}</td>
+                                        <td>{{ u.email }}</td>
+                                        <td>{{ u.contact if u.contact else 'Not Provided' }}</td>
+                                    {% endif %}
+                                {% endfor %}
+                                <td><strong>{{ b.status }}</strong></td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if not ns.has_bookings %}
+                    <tr>
+                        <td>No participants have registered for this trek route yet.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        {% endfor %}
+    {% else %}
+        <p>No registered participants to display.</p>
+    {% endif %}
+</body>
+</html>

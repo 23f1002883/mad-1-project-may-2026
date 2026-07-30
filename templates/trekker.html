@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trekker's Dashboard</title>
+    <style> 
+    body {
+        font-family: Arial, sans-serif; 
+        margin: 30px; 
+        background-color: #F4F6F4; 
+        color: #070707;} 
+    table {width: 100%; 
+        border-collapse: collapse; 
+        margin-top: 15px; 
+        margin-bottom: 35px; 
+        background-color: #ecd2ce; }
+    th, td {border: 1px solid #000000; 
+        padding: 12px; 
+        text-align: left;
+        vertical-align: middle;} 
+    th {background-color: #cedae8;
+        font-weight: bold;} 
+    tr:nth-child(even) {
+        background-color: #c0cfb4;} 
+    tr:nth-child(odd) {
+        background-color: #FFFFFF; }
+    input, select, button {padding: 6px; 
+        margin-right: 10px; 
+        margin: 4px 0;} 
+    button {cursor: pointer;}
+</style>
+</head>
+
+<body>
+    <h1>WELCOME TO TREKKER'S PORTAL, {{ session['user_name'] }}</h1>
+    <a href="/logout">Log out</a><hr>
+    <a href="/edit_profile">Edit Profile</a><hr>
+
+    <h2>Search and Filter Treks</h2>
+    <div class="filter-bar">
+        <form method="GET" action="/trekker">
+            <label><strong>Location:</strong></label>
+            <input type="text" name="location" value="{{ sel_loc }}">
+
+            <label><strong>Difficulty:</strong></label>
+            <select name="difficulty">
+                <option value="">-- All Levels --</option>
+                <option value="Easy" {% if sel_diff == 'Easy' %}selected{% endif %}>Easy</option>
+                <option value="Moderate" {% if sel_diff == 'Moderate' %}selected{% endif %}>Moderate</option>
+                <option value="Hard" {% if sel_diff == 'Hard' %}selected{% endif %}>Hard</option>
+            </select>
+
+            <button type="submit" style="background-color: #28a745; color: white; cursor: pointer;" >Apply Filters</button>
+            <a href="/trekker" style="text-decoration: none; font-size: 14px; color: #666;">Clear All</a>
+        </form>
+    </div><hr>
+
+    <h2>Available Trekking Routes</h2>
+    {% if available_treks %}
+    <table>
+        <thead>
+            <tr>
+                <th>Trek Name</th><th>Location</th><th>Difficulty</th>
+                <th>Duration</th><th>Starting Date</th>
+                <th>Remaining Open Slots</th><th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for trek in available_treks %}
+            <tr>
+                <td><strong>{{ trek.name }}</strong></td>
+                <td>{{ trek.location }}</td>
+                <td>{{ trek.difficulty }}</td>
+                <td>{{ trek.duration }} Days</td>
+                <td>{{ trek.start_date }}</td>
+                <td>{{ trek.available_slot }}</td>
+                <td>
+                    <form action="/book_trek" method="POST">
+                        <input type="hidden" name="trek_id" value="{{ trek.id }}">
+                        {% if trek.id in booked_ids %}
+                            <button type="button" disabled>Already Booked</button>
+                        {% elif trek.available_slot <= 0 %}
+                            <button type="button" disabled>Sold Out</button>
+                        {% else %}
+                            <button type="submit" style="background-color: #28a745; color: white; cursor: pointer;">Book This Trek</button>
+                        {% endif %}
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>No open trekking itineraries match your search filters at this time.</p>
+    {% endif %}
+    <hr>
+
+    <h2>Your Current Bookings</h2>
+    {% if current_bookings %}
+    <table>
+        <thead>
+            <tr>
+                <th>Registered Trek Itinerary</th>
+                <th>Departure Date</th>
+                <th>Trek Status</th>
+                <th>Booking Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for trip in current_bookings %}
+            <tr>
+                <td><strong>{{ trip.name }}</strong> ({{ trip.location }})</td>
+                <td>{{ trip.start_date }}</td>
+                <td style="text-transform: capitalize; font-weight: bold; color: #0f07ff;">{{ trip.trek_status }}</td>
+                <td><span style="color: #28a745; font-weight: bold; text-transform: uppercase;">{{ trip.booking_status }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>You don't have any upcoming trek reservations scheduled.</p>
+    {% endif %}
+    <hr>
+
+
+    <h2>Your Trekking History</h2>
+    {% if history %}
+    <table>
+        <thead>
+            <tr>
+                <th>Past Trek Destination</th>
+                <th>Location</th>
+                <th>Timeline</th>
+                <th>Journey Outcome</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for past_trip in history %}
+            <tr>
+                <td><strong>{{ past_trip.name }}</strong></td>
+                <td>{{ past_trip.location }}</td>
+                <td>{{ past_trip.start_date }} to {{ past_trip.end_date }}</td>
+                <td><span style="background-color: #6c757d; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; text-transform: uppercase;">Completed Adventure</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>No past trekking expeditions recorded on this account yet.</p>
+    {% endif %}
+</body>
+</html>
